@@ -1,5 +1,6 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get, Logger, Res } from '@nestjs/common';
 import { Client, ClientProxy, Transport } from '@nestjs/microservices';
+import { Response } from 'express';
 import { lastValueFrom } from 'rxjs';
 import { AppService } from './app.service';
 
@@ -12,6 +13,8 @@ export class AppController {
     options: {
       urls: ['amqp://localhost:5672'],
       queue: 'temp-queue',
+      noAck: false,
+      persistent: true,
     },
   })
   private clientProxy: ClientProxy;
@@ -19,9 +22,9 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  async getHello(): Promise<string> {
+  async getHello() {
     const randomValue: number = Math.round(Math.random() * 1000);
-    const obs = await this.clientProxy.send('temp-topic', {
+    const obs = await this.clientProxy.emit('temp1', {
       a: randomValue,
       b: `abc_${randomValue}`,
     });
@@ -32,6 +35,22 @@ export class AppController {
       .catch((err) => {
         console.log({ err });
       });
-    return this.appService.getHello();
+    return 'okkkk';
+  }
+  @Get('/temp2')
+  async temp2() {
+    const randomValue: number = Math.round(Math.random() * 1000);
+    const obs = await this.clientProxy.send('temp2', {
+      a: randomValue,
+      b: `abc_${randomValue}`,
+    });
+    lastValueFrom(obs)
+      .then((res) => {
+        console.log({ res });
+      })
+      .catch((err) => {
+        console.log({ err });
+      });
+    return 'temp2';
   }
 }
