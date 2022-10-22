@@ -9,8 +9,19 @@ async function bootstrap() {
     options: {
       urls: ['amqp://localhost:5672'],
       queue: 'temp-queue',
+      noAck: false,
     },
   });
+  
+  const appRedis = await NestFactory.createMicroservice(AppModule, {
+    transport: Transport.REDIS,
+    options: {
+      host: 'localhost',
+      port: 6379,
+    },
+  });
+
   await app.listen();
+  await appRedis.listen();
 }
 bootstrap();

@@ -19,38 +19,82 @@ export class AppController {
   })
   private clientProxy: ClientProxy;
 
+  @Client({
+    transport: Transport.REDIS,
+    options: {
+      host: 'localhost',
+      port: 6379,
+    },
+  })
+  private clientProxyRedis: ClientProxy;
+
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  async getHello() {
+  @Get('rabbit-emit')
+  async rebbitEmmit() {
     const randomValue: number = Math.round(Math.random() * 1000);
-    const obs = await this.clientProxy.emit('temp1', {
-      a: randomValue,
-      b: `abc_${randomValue}`,
+    const obs = this.clientProxy.emit('rabbit-emit', {
+      random: randomValue,
     });
     lastValueFrom(obs)
-      .then((res) => {
-        console.log({ res });
+      .then((resultRabbitEmit) => {
+        console.log({ res: resultRabbitEmit });
       })
       .catch((err) => {
         console.log({ err });
       });
-    return 'okkkk';
+    return 'rabbit-emit';
   }
-  @Get('/temp2')
-  async temp2() {
+  @Get('rabbit-send')
+  async rabbitSend() {
     const randomValue: number = Math.round(Math.random() * 1000);
-    const obs = await this.clientProxy.send('temp2', {
-      a: randomValue,
-      b: `abc_${randomValue}`,
+    const obs = this.clientProxy.send('rabbit-send', {
+      random: randomValue,
+    });
+    // lastValueFrom(obs)
+    //   .then((resultRabbitSend) => {
+    //     console.log({ res: resultRabbitSend });
+    //   })
+    //   .catch((err) => {
+    //     console.log({ err });
+    //   });
+    try {
+      const result = await lastValueFrom(obs);
+      console.log({ result });
+    } catch (err) {
+      console.log({ err });
+    }
+
+    return 'rabbit-send';
+  }
+  @Get('redis-emit')
+  async redisEmit() {
+    const randomValue: number = Math.round(Math.random() * 1000);
+    const obs = this.clientProxyRedis.emit('redis-emit', {
+      random: randomValue,
     });
     lastValueFrom(obs)
-      .then((res) => {
-        console.log({ res });
+      .then((resultRedisEmit) => {
+        console.log({ resultRedisEmit });
       })
       .catch((err) => {
         console.log({ err });
       });
-    return 'temp2';
+    return 'redis-emit';
+  }
+  @Get('redis-send')
+  async redisSend() {
+    const randomValue: number = Math.round(Math.random() * 1000);
+    const obs = this.clientProxyRedis.send('redis-send', {
+      random: randomValue,
+    });
+    lastValueFrom(obs)
+      .then((resultRedisEmit) => {
+        console.log({ resultRedisEmit });
+      })
+      .catch((err) => {
+        console.log({ err });
+      });
+    return 'redis-send';
   }
 }
