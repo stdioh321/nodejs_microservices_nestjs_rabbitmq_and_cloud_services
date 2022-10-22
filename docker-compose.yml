@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  rabbit:
+    container_name: rabbit
+    image: 'rabbitmq:3-management'
+    restart: unless-stopped
+    logging:
+      driver: none
+    network_mode: host
+  redis:
+    container_name: redis
+    image: 'redis:latest'
+    restart: unless-stopped
+    logging:
+      driver: none
+    network_mode: host
+  app1:
+    container_name: app1
+    image: node:16
+    working_dir: /app
+    command: >
+      bash -c "sleep 10 && npm run start:dev"
+    restart: always
+    volumes:
+      - ./api-gateway:/app
+    depends_on:
+      - rabbit
+      - redis
+    network_mode: host
+  app2:
+    container_name: app2
+    image: node:16
+    working_dir: /app
+    command: >
+      bash -c "sleep 10 && npm run start:dev"
+    restart: always
+    volumes:
+      - ./api-consumer:/app
+    depends_on:
+      - rabbit
+      - redis
+      - app1
+    network_mode: host
